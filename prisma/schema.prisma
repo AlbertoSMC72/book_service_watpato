@@ -1,0 +1,243 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              BigInt    @id @default(autoincrement())
+  username        String    @unique
+  email           String    @unique
+  passwordHash    String    @map("password_hash")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  friendCode      String?   @unique @map("friend_code")
+  profilePicture  String?   @map("profile_picture")
+  banner          String?
+  biography       String?
+
+  // Relations
+  books                 Book[]
+  booksLikes           BookLike[]
+  userSubscriptions    UserSubscription[] @relation("UserSubscriptions")
+  followers            UserSubscription[] @relation("UserFollowers")
+  chaptersLikes        ChapterLike[]
+  userFavGenres        UserFavGenre[]
+  firebaseTokens       UserFirebaseToken[]
+  friends              UserFriend[]       @relation("UserFriends")
+  friendOf             UserFriend[]       @relation("FriendOf")
+  bookComments         BookComment[]
+  chapterComments      ChapterComment[]
+  actionLogs           UserActionLog[]
+  paragraphComments    ParagraphComment[]
+
+  @@map("users")
+}
+
+model Book {
+  id          BigInt    @id @default(autoincrement())
+  title       String
+  description String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  authorId    BigInt?   @map("author_id")
+  published   Boolean   @default(false)
+  coverImage  String?   @map("cover_image")
+
+  // Relations
+  author        User?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  genres        BookGenre[]
+  chapters      Chapter[]
+  likes         BookLike[]
+  comments      BookComment[]
+
+  @@map("books")
+}
+
+model Genre {
+  id   BigInt @id @default(autoincrement())
+  name String @unique
+
+  // Relations
+  books         BookGenre[]
+  userFavGenres UserFavGenre[]
+
+  @@map("genres")
+}
+
+model BookGenre {
+  bookId  BigInt @map("book_id")
+  genreId BigInt @map("genre_id")
+
+  // Relations
+  book  Book  @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  genre Genre @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, genreId])
+  @@map("book_genres")
+}
+
+model Chapter {
+  id        BigInt   @id @default(autoincrement())
+  title     String
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  bookId    BigInt?  @map("book_id")
+  published Boolean  @default(false)
+
+  // Relations
+  book              Book?               @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  likes             ChapterLike[]
+  comments          ChapterComment[]
+  paragraphs        ChapterParagraph[]
+
+  @@map("chapters")
+}
+
+model BookLike {
+  userId BigInt @map("user_id")
+  bookId BigInt @map("book_id")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@id([userId, bookId])
+  @@map("books_likes")
+}
+
+model UserSubscription {
+  id         BigInt @id @default(autoincrement())
+  userId     BigInt @map("user_id")
+  followerId BigInt @map("follower_id")
+
+  // Relations
+  user     User @relation("UserSubscriptions", fields: [userId], references: [id], onDelete: Cascade)
+  follower User @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+
+  @@map("user_subscriptions")
+}
+
+model ChapterLike {
+  userId    BigInt @map("user_id")
+  chapterId BigInt @map("chapter_id")
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@id([userId, chapterId])
+  @@map("chapters_likes")
+}
+
+model UserFavGenre {
+  userId  BigInt @map("user_id")
+  genreId BigInt @map("genre_id")
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  genre Genre @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([userId, genreId])
+  @@map("user_fav_genres")
+}
+
+model UserFirebaseToken {
+  id            BigInt @id @default(autoincrement())
+  userId        BigInt @map("user_id")
+  firebaseToken String @map("firebase_token")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_firebase_tokens")
+}
+
+model UserFriend {
+  userId     BigInt @map("user_id")
+  friendCode String @map("friend_code")
+
+  // Relations
+  user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("FriendOf", fields: [friendCode], references: [friendCode], onDelete: Cascade)
+
+  @@id([userId, friendCode])
+  @@map("user_friends")
+}
+
+model BookComment {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt   @map("user_id")
+  bookId    BigInt   @map("book_id")
+  comment   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@map("book_comments")
+}
+
+model ChapterComment {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt   @map("user_id")
+  chapterId BigInt   @map("chapter_id")
+  comment   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@map("chapter_comments")
+}
+
+model UserActionLog {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt   @map("user_id")
+  action    String
+  timestamp DateTime @default(now())
+  metadata  Json?
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_action_logs")
+}
+
+model ChapterParagraph {
+  id              BigInt @id @default(autoincrement())
+  chapterId       BigInt @map("chapter_id")
+  paragraphNumber Int    @map("paragraph_number")
+  content         String
+
+  // Relations
+  chapter  Chapter            @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  comments ParagraphComment[]
+
+  @@map("chapter_paragraphs")
+}
+
+model ParagraphComment {
+  id          BigInt   @id @default(autoincrement())
+  userId      BigInt   @map("user_id")
+  paragraphId BigInt   @map("paragraph_id")
+  friendCode  String   @map("friend_code")
+  comment     String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paragraph ChapterParagraph @relation(fields: [paragraphId], references: [id], onDelete: Cascade)
+
+  @@map("paragraph_comments")
+}

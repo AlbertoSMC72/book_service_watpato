@@ -1,0 +1,391 @@
+# 🔐 User Authentication Service
+
+API REST para autenticación de usuarios construida con **Node.js**, **TypeScript**, **Express**, **Prisma** y **PostgreSQL** usando **Arquitectura Hexagonal**.
+
+## 📋 Tabla de Contenidos
+
+- [Características](#-características)
+- [Tecnologías](#-tecnologías)
+- [Arquitectura](#-arquitectura)
+- [Requisitos Previos](#-requisitos-previos)
+- [Instalación](#-instalación)
+- [Configuración](#-configuración)
+- [Base de Datos](#-base-de-datos)
+- [Ejecución](#-ejecución)
+- [Endpoints](#-endpoints)
+- [Estructura del Proyecto](#-estructura-del-proyecto)
+- [Herramientas de BD](#-herramientas-de-base-de-datos)
+- [Comandos Útiles](#-comandos-útiles)
+- [Troubleshooting](#-troubleshooting)
+
+## ✨ Características
+
+- 🔒 **Registro de usuarios** con validación de datos
+- 🔑 **Login de usuarios** con autenticación JWT
+- 🛡️ **Hash de contraseñas** con bcrypt
+- 👥 **Sistema de códigos de amigo** únicos
+- 📊 **ORM Prisma** para manejo de base de datos
+- 🏗️ **Arquitectura Hexagonal** (Clean Architecture)
+- ✅ **Validación con Zod**
+- 🌐 **CORS habilitado**
+- 📝 **Logs detallados**
+
+## 🛠 Tecnologías
+
+- **Runtime**: Node.js 18+
+- **Lenguaje**: TypeScript
+- **Framework**: Express.js
+- **ORM**: Prisma
+- **Base de Datos**: PostgreSQL (AWS RDS)
+- **Autenticación**: JWT (jsonwebtoken)
+- **Hash**: bcrypt
+- **Validación**: Zod
+- **Variables de Entorno**: dotenv
+
+## 🏗 Arquitectura
+
+```
+📦 Arquitectura Hexagonal (Ports & Adapters)
+├── 🎯 Domain (Núcleo)
+│   ├── Models (Entidades)
+│   ├── Ports (Interfaces)
+│   └── Services (Lógica de Negocio)
+├── 🔌 Adapters
+│   ├── Driving (Entrada) - Controllers
+│   └── Driven (Salida) - Repositories
+└── 🏭 Infrastructure
+    └── Dependency Injection
+```
+
+## 📋 Requisitos Previos
+
+- **Node.js** 18+ y **npm**
+- **PostgreSQL** (local o en la nube)
+- **Git**
+
+## 🚀 Instalación
+
+### 1. Clonar el repositorio
+```bash
+git clone <repository-url>
+cd User_authentication_service
+```
+
+### 2. Instalar dependencias
+```bash
+npm install
+```
+
+### 3. Instalar dependencias de desarrollo
+```bash
+npm install -D tsx nodemon @types/node @types/express @types/bcrypt @types/jsonwebtoken @types/cors
+```
+
+## ⚙️ Configuración
+
+### 1. Crear archivo de variables de entorno
+```bash
+cp .env.example .env
+```
+
+### 2. Configurar variables en `.env`
+
+## 🗄️ Base de Datos
+
+### Información de Conexión
+- **Host**: `localhost`
+- **Puerto**: `5432`
+- **Base de Datos**: `postgres`
+- **Schema**: `watpato`
+- **Usuario**: `postgres`
+
+### Comandos de Prisma
+
+#### 1. Generar cliente de Prisma
+```bash
+npx prisma generate
+```
+
+#### 2. Sincronizar schema con BD
+```bash
+npx prisma db push
+```
+
+#### 3. Ver datos con Prisma Studio
+```bash
+npx prisma studio
+```
+
+#### 4. Reset de base de datos (⚠️ CUIDADO - Borra todos los datos)
+```bash
+npx prisma migrate reset
+```
+
+#### 5. Ver información de la BD
+```bash
+npx prisma db pull
+```
+
+## 🎯 Ejecución
+
+### Desarrollo
+```bash
+npm run dev
+```
+
+### Producción
+```bash
+npm run build
+npm start
+```
+
+### Scripts disponibles
+```bash
+npm run dev          # Ejecutar en modo desarrollo (con nodemon)
+npm run build        # Compilar TypeScript
+npm start            # Ejecutar versión compilada
+npm run prisma:generate  # Generar cliente Prisma
+npm run prisma:push      # Sincronizar schema
+npm run prisma:reset     # Reset de BD
+```
+
+## 🔗 Endpoints
+
+### Base URL
+```
+http://localhost:3000
+```
+
+### Salud del servicio
+```http
+GET /health
+```
+
+### Autenticación
+
+#### Registro de Usuario
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "username": "johndoe",
+  "email": "john@example.com",
+  "password": "password123"
+}
+```
+
+**Respuesta exitosa (201)**:
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "id": "1",
+    "username": "johndoe",
+    "email": "john@example.com",
+    "friendCode": "#ABC123",
+    "createdAt": "2025-07-03T15:30:45.000Z"
+  }
+}
+```
+
+#### Login de Usuario
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+```
+
+**Respuesta exitosa (200)**:
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "user": {
+      "id": "1",
+      "username": "johndoe",
+      "email": "john@example.com",
+      "friendCode": "#ABC123"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
+### Debug (Solo desarrollo)
+```http
+GET /api/debug/users
+```
+
+## 📁 Estructura del Proyecto
+
+```
+src/
+├── register/
+│   ├── domain/
+│   │   ├── models/           # User.model.ts
+│   │   ├── ports/            # Interfaces (UserRepository, PasswordService)
+│   │   └── services/         # RegisterService.ts
+│   └── adapters/
+│       ├── driven/           # Implementaciones (BD, servicios)
+│       └── driving/          # Controllers HTTP
+├── login/
+│   ├── domain/
+│   │   ├── models/           # Auth.model.ts
+│   │   ├── ports/            # Interfaces (AuthRepository, TokenService)
+│   │   └── services/         # LoginService.ts
+│   └── adapters/
+│       ├── driven/           # Implementaciones
+│       └── driving/          # Controllers HTTP
+├── shared/
+│   ├── adapters/driving/     # Rutas compartidas
+│   └── infrastructure/       # Inyección de dependencias
+├── prisma/
+│   └── schema.prisma         # Schema de base de datos
+├── app.ts                    # Punto de entrada
+└── .env                      # Variables de entorno
+```
+
+## 🔧 Herramientas de Base de Datos
+
+### DBeaver (Recomendado)
+1. **Descargar**: https://dbeaver.io/download/
+2. **Nueva conexión PostgreSQL**
+3. **Configurar**:
+   - Host: `localhost`
+   - Puerto: `5432`
+   - Base de datos: `mydb`
+   - Usuario: `postgres`
+   - Contraseña: `******`
+
+### pgAdmin
+1. **Descargar**: https://www.pgadmin.org/download/
+2. **Configurar con los mismos datos de arriba**
+
+### Línea de comandos (psql)
+```bash
+psql -h localhost -p 5432 -U postgres -d mydb
+```
+
+### Comandos SQL útiles
+```sql
+-- Cambiar al schema correcto
+SET search_path TO watpato;
+
+-- Ver todos los usuarios
+SELECT * FROM users ORDER BY created_at DESC;
+
+-- Contar usuarios
+SELECT COUNT(*) FROM users;
+
+-- Ver tablas
+\dt
+```
+
+## 📋 Comandos Útiles
+
+### Desarrollo
+```bash
+# Reiniciar servidor (durante ejecución)
+rs
+
+# Ver logs de Prisma
+DEBUG=prisma:* npm run dev
+
+# Limpiar node_modules
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### Base de Datos
+```bash
+# Verificar conexión
+npx prisma db execute --command "SELECT 1"
+
+# Ver estado de migraciones
+npx prisma migrate status
+
+# Formatear schema
+npx prisma format
+```
+
+### Testing con curl
+```bash
+# Registrar usuario
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","email":"test@example.com","password":"password123"}'
+
+# Login
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
+
+# Health check
+curl http://localhost:3000/health
+```
+
+## 🚨 Troubleshooting
+
+### Error: "Prisma Client did not initialize"
+```bash
+npx prisma generate
+```
+
+### Error: "Cannot connect to database"
+1. Verificar `.env` tiene `DATABASE_URL` correcta
+2. Verificar conectividad de red
+3. Verificar credenciales de BD
+
+### Error: "Module not found"
+```bash
+npm install
+npx prisma generate
+```
+
+### La BD no muestra datos
+1. Verificar que estés en el schema `watpato`
+2. Refrescar la vista en DBeaver (F5)
+3. Verificar con: `GET /api/debug/users`
+
+### Puerto en uso
+```bash
+# Cambiar puerto en .env
+PORT=3001
+
+# O matar proceso
+npx kill-port 3000
+```
+
+### Logs adicionales
+```bash
+# Ver logs detallados de Prisma
+DATABASE_URL="..." npx prisma db push --preview-feature
+```
+
+## 📊 Monitoreo
+
+### Health Check
+```bash
+curl http://localhost:3000/health
+```
+
+### Estado de la aplicación
+- ✅ **Servidor corriendo**: Puerto 3000
+- ✅ **BD conectada**: Logs muestran conexión exitosa
+- ✅ **Endpoints funcionando**: `/health` responde
+
+### Logs importantes
+```
+✅ Database connected successfully
+🚀 Server running on port 3000
+📍 Health check: http://localhost:3000/health
+🔐 Register: POST http://localhost:3000/api/auth/register
+🔑 Login: POST http://localhost:3000/api/auth/login
+```
