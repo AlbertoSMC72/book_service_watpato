@@ -14,7 +14,7 @@ export const createBookSchema = z.object({
         .positive('El ID del autor debe ser positivo'),
     genreIds: z.array(z.number().int().positive()).optional(),
     newGenres: z.array(z.string().min(2).max(50)).optional(),
-    coverImage: z.string().url('Debe ser una URL válida').optional()
+    coverImage: z.string().optional()
 });
 
 export const updateBookSchema = z.object({
@@ -28,7 +28,7 @@ export const updateBookSchema = z.object({
         .optional(),
     genreIds: z.array(z.number().int().positive()).optional(),
     newGenres: z.array(z.string().min(2).max(50)).optional(),
-    coverImage: z.string().url('Debe ser una URL válida').optional()
+    coverImage: z.string().optional()
 });
 
 export const publishBookSchema = z.object({
