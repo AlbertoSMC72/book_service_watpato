@@ -51,7 +51,7 @@ router.post('/genres', GenresController.createGenres);
 
 /**
  * @swagger
- * /api/books/all-simplified:
+ * /api/books/:
  *   get:
  *     summary: Obtiene todos los libros publicados con información simplificada
  *     tags: [Books]
