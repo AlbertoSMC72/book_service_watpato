@@ -9,6 +9,24 @@ import {
 
 export class BooksController {
 
+    static async getAllBooksSimplified(req: Request, res: Response): Promise<void> {
+        try {
+            const books = await BooksService.getAllBooksSimplified();
+            res.status(200).json({
+                success: true,
+                message: 'Libros obtenidos exitosamente',
+                data: books
+            });
+
+        } catch (error) {
+            console.error('Error en getAllBooksSimplified:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Error interno del servidor'
+            });
+        }
+    }
+
     static async createBook(req: Request, res: Response): Promise<void> {
         try {
             const validationResult = createBookSchema.safeParse(req.body);

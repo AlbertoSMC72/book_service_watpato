@@ -9,7 +9,25 @@ import {
 } from '../models/booksModels';
 
 export class BooksService {
-  
+
+  static async getAllBooksSimplified(): Promise<Array<{
+  id: string;
+  title: string;
+  coverImage: string | null;
+  genre: string;
+}>> {
+  try {
+    const books = await BooksRepository.getAllBooksSimplified();
+    return books;
+  } catch (error) {
+    console.error('Error en BooksService.getAllBooksSimplified:', error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Error al obtener todos los libros');
+  }
+}
+
   static async createBook(bookData: CreateBookType): Promise<BookResponse> {
     try {
       // Verificar que el autor existe

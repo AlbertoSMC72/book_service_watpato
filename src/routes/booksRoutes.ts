@@ -51,6 +51,62 @@ router.post('/genres', GenresController.createGenres);
 
 /**
  * @swagger
+ * /api/books/all-simplified:
+ *   get:
+ *     summary: Obtiene todos los libros publicados con información simplificada
+ *     tags: [Books]
+ *     description: Retorna solo ID, título, portada y primer género de cada libro
+ *     responses:
+ *       200:
+ *         description: Lista de libros obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Libros obtenidos exitosamente"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         example: "1"
+ *                       title:
+ *                         type: string
+ *                         example: "El Gran Libro"
+ *                       coverImage:
+ *                         type: string
+ *                         nullable: true
+ *                         example: "data:image/jpeg;base64,..."
+ *                       genre:
+ *                         type: string
+ *                         example: "Fantasía"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Error interno del servidor"
+ */
+router.get('/', BooksController.getAllBooksSimplified);
+
+
+/**
+ * @swagger
  * /api/books:
  *   post:
  *     summary: Crear un nuevo libro
