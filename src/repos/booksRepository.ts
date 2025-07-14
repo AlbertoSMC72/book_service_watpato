@@ -91,91 +91,104 @@ export class BooksRepository {
         }
     }
 
-    static async getBookWithChapters(bookId: number, userId: number): Promise<BookWithChaptersResponse | null> {
-        try {
-            const book = await prisma.book.findUnique({
-                where: { id: BigInt(bookId) },
-                include: {
-                    author: {
-                        select: {
-                            username: true,
-                            profilePicture: true
-                        }
-                    },
-                    genres: {
-                        include: {
-                            genre: {
-                                select: {
-                                    id: true,
-                                    name: true
-                                }
-                            }
-                        }
-                    },
-                    chapters: {
-                        where: { published: true },
-                        select: {
-                            id: true,
-                            title: true,
-                            published: true,
-                            createdAt: true,
-                            likes: {
-                                where: { userId: BigInt(userId) },
-                                select: { userId: true }
-                            }
-                        },
-                        orderBy: { createdAt: 'asc' }
-                    },
-                    comments: {
-                        include: {
-                            user: {
-                                select: {
-                                    username: true,
-                                    profilePicture: true
-                                }
-                            }
-                        },
-                        orderBy: { createdAt: 'desc' }
+static async getBookWithChapters(bookId: number, userId: number): Promise<BookWithChaptersResponse | null> {
+    try {
+        // Primero obtenemos el libro para verificar si el usuario es el autor
+        const book = await prisma.book.findUnique({
+            where: { id: BigInt(bookId) },
+            select: {
+                authorId: true
+            }
+        });
+
+        if (!book) return null;
+
+        const isAuthor = book.authorId?.toString() === userId.toString();
+
+        // Ahora hacemos la consulta completa con la condición de capítulos según si es autor o no
+        const fullBook = await prisma.book.findUnique({
+            where: { id: BigInt(bookId) },
+            include: {
+                author: {
+                    select: {
+                        username: true,
+                        profilePicture: true
                     }
+                },
+                genres: {
+                    include: {
+                        genre: {
+                            select: {
+                                id: true,
+                                name: true
+                            }
+                        }
+                    }
+                },
+                chapters: {
+                    where: isAuthor ? undefined : { published: true },
+                    select: {
+                        id: true,
+                        title: true,
+                        published: true,
+                        createdAt: true,
+                        likes: {
+                            where: { userId: BigInt(userId) },
+                            select: { userId: true }
+                        }
+                    },
+                    orderBy: { createdAt: 'asc' }
+                },
+                comments: {
+                    include: {
+                        user: {
+                            select: {
+                                username: true,
+                                profilePicture: true
+                            }
+                        }
+                    },
+                    orderBy: { createdAt: 'desc' }
                 }
-            });
+            }
+        });
 
-            if (!book) return null;
+        if (!fullBook) return null;
 
-            const result = {
-                id: book.id.toString(),
-                title: book.title,
-                description: book.description,
-                coverImage: book.coverImage,
-                published: book.published,
-                createdAt: book.createdAt,
-                authorId: book.authorId?.toString() || '',
-                author: book.author!,
-                genres: book.genres.map((bg: any) => ({
-                    id: bg.genre.id.toString(),
-                    name: bg.genre.name
-                })),
-                chapters: book.chapters.map((chapter: any) => ({
-                    id: chapter.id.toString(),
-                    title: chapter.title,
-                    published: chapter.published,
-                    createdAt: chapter.createdAt,
-                    isLiked: chapter.likes.length > 0
-                })),
-                comments: book.comments.map((comment: any) => ({
-                    id: comment.id.toString(),
-                    comment: comment.comment,
-                    createdAt: comment.createdAt,
-                    user: comment.user
-                }))
-            };
+        const result = {
+            id: fullBook.id.toString(),
+            title: fullBook.title,
+            description: fullBook.description,
+            coverImage: fullBook.coverImage,
+            published: fullBook.published,
+            createdAt: fullBook.createdAt,
+            authorId: fullBook.authorId?.toString() || '',
+            author: fullBook.author!,
+            genres: fullBook.genres.map((bg: any) => ({
+                id: bg.genre.id.toString(),
+                name: bg.genre.name
+            })),
+            chapters: fullBook.chapters.map((chapter: any) => ({
+                id: chapter.id.toString(),
+                title: chapter.title,
+                published: chapter.published,
+                createdAt: chapter.createdAt,
+                isLiked: chapter.likes.length > 0
+            })),
+            comments: fullBook.comments.map((comment: any) => ({
+                id: comment.id.toString(),
+                comment: comment.comment,
+                createdAt: comment.createdAt,
+                user: comment.user
+            }))
+        };
 
-            return serializeBigInt(result);
-        } catch (error) {
-            console.error('Error en BooksRepository.getBookWithChapters:', error);
-            throw error;
-        }
+        return serializeBigInt(result);
+    } catch (error) {
+        console.error('Error en BooksRepository.getBookWithChapters:', error);
+        throw error;
     }
+}
 
     static async updateBook(bookId: number, updateData: UpdateBookType & { genreIds?: number[] }): Promise<BookResponse | null> {
         try {
