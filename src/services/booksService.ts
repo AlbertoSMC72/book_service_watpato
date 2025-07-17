@@ -16,6 +16,7 @@ export class BooksService {
   coverImage: string | null;
   genre: string;
 }>> {
+
   try {
     const books = await BooksRepository.getAllBooksSimplified();
     return books;
@@ -58,6 +59,21 @@ export class BooksService {
         ...bookData,
         genreIds: allGenreIds
       });
+
+      //Notificar a los seguidores del autor
+      try {
+        const url = `${process.env.NOTIFICATION_URL}/notify/author`;
+        fetch(url, {
+          method: 'POST',
+          body: JSON.stringify({
+            "authorId": bookData.authorId,
+            "title": bookData.title,
+            "body": "El autor que sigues acaba de publicar un nuevo libro."
+          }),
+        });
+      } catch (notifyError) {
+        console.error('Error al notificar a los seguidores del autor:', notifyError);
+      }
 
       return book;
     } catch (error) {

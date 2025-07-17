@@ -19,6 +19,18 @@ export class ChaptersService {
       }
 
       const chapter = await ChaptersRepository.createChapter(bookId, chapterData);
+
+      //Notificar a los seguidores del libro
+      const url = `${process.env.NOTIFICATION_URL}/notify/book`;
+      fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({
+          "bookId": bookId,
+          "title": chapterData.title,
+          "body": "El autor que sigues acaba de publicar un nuevo capítulo."
+        }),
+      });
+
       return chapter;
     } catch (error) {
       console.error('Error en ChaptersService.createChapter:', error);
