@@ -217,16 +217,16 @@ export class ChaptersRepository {
     }
 
     // Método auxiliar
-    static async chapterExists(chapterId: number): Promise<boolean> {
+    static async chapterExists(chapterId: number): Promise<{ exists: boolean, bookId?: string, title?: string }> {
         try {
             const chapter = await prisma.chapter.findUnique({
                 where: { id: BigInt(chapterId) },
-                select: { id: true }
+                select: { id: true, bookId: true, title: true }
             });
-            return !!chapter;
+            return { exists: !!chapter, bookId: chapter?.bookId?.toString(), title: chapter?.title };
         } catch (error) {
             console.error('Error en ChaptersRepository.chapterExists:', error);
-            return false;
+            return { exists: false };
         }
     }
 }

@@ -494,16 +494,16 @@ export class BooksRepository {
         }
     }
 
-    static async bookExists(bookId: number): Promise<boolean> {
+    static async bookExists(bookId: number): Promise<{ exists: boolean, authorId?: string, title?: string }> {
         try {
             const book = await prisma.book.findUnique({
                 where: { id: BigInt(bookId) },
-                select: { id: true }
+                select: { id: true, authorId: true, title: true }
             });
-            return !!book;
+            return { exists: !!book, authorId: book?.authorId?.toString(), title: book?.title };
         } catch (error) {
             console.error('Error en BooksRepository.bookExists:', error);
-            return false;
+            return { exists: false };
         }
     }
 }

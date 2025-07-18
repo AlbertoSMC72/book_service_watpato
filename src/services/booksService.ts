@@ -1,8 +1,8 @@
 // src/services/booksService.ts
 import { BooksRepository } from '../repos/booksRepository';
 import { GenresRepository } from '../repos/genresRepository';
-import { 
-  CreateBookType, 
+import {
+  CreateBookType,
   UpdateBookType,
   BookResponse,
   BookWithChaptersResponse
@@ -11,23 +11,23 @@ import {
 export class BooksService {
 
   static async getAllBooksSimplified(): Promise<Array<{
-  id: string;
-  title: string;
-  coverImage: string | null;
-  genre: string;
-}>> {
+    id: string;
+    title: string;
+    coverImage: string | null;
+    genre: string;
+  }>> {
 
-  try {
-    const books = await BooksRepository.getAllBooksSimplified();
-    return books;
-  } catch (error) {
-    console.error('Error en BooksService.getAllBooksSimplified:', error);
-    if (error instanceof Error) {
-      throw error;
+    try {
+      const books = await BooksRepository.getAllBooksSimplified();
+      return books;
+    } catch (error) {
+      console.error('Error en BooksService.getAllBooksSimplified:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Error al obtener todos los libros');
     }
-    throw new Error('Error al obtener todos los libros');
   }
-}
 
   static async createBook(bookData: CreateBookType): Promise<BookResponse> {
     try {
@@ -39,7 +39,7 @@ export class BooksService {
 
       // Procesar géneros nuevos si existen
       let allGenreIds: number[] = [];
-      
+
       if (bookData.newGenres && bookData.newGenres.length > 0) {
         const newGenres = await GenresRepository.createMultipleGenres(bookData.newGenres);
         allGenreIds = newGenres.map(genre => parseInt(genre.id));
@@ -60,20 +60,6 @@ export class BooksService {
         genreIds: allGenreIds
       });
 
-      //Notificar a los seguidores del autor
-      try {
-        const url = `${process.env.NOTIFICATION_URL}/notify/author`;
-        fetch(url, {
-          method: 'POST',
-          body: JSON.stringify({
-            "authorId": bookData.authorId,
-            "title": bookData.title,
-            "body": "El autor que sigues acaba de publicar un nuevo libro."
-          }),
-        });
-      } catch (notifyError) {
-        console.error('Error al notificar a los seguidores del autor:', notifyError);
-      }
 
       return book;
     } catch (error) {
@@ -105,7 +91,7 @@ export class BooksService {
 
       // Procesar géneros nuevos si existen
       let allGenreIds: number[] = [];
-      
+
       if (bookData.newGenres && bookData.newGenres.length > 0) {
         const newGenres = await GenresRepository.createMultipleGenres(bookData.newGenres);
         allGenreIds = newGenres.map(genre => parseInt(genre.id));
@@ -139,6 +125,24 @@ export class BooksService {
   static async togglePublishStatus(bookId: number, published: boolean): Promise<BookResponse | null> {
     try {
       const book = await BooksRepository.togglePublishStatus(bookId, published);
+
+      const bookData = await BooksRepository.bookExists(bookId);
+
+      //Notificar a los seguidores del autor
+      try {
+        const url = `${process.env.NOTIFICATION_URL}/notify/author`;
+        fetch(url, {
+          method: 'POST',
+          body: JSON.stringify({
+            "authorId": bookData.authorId,
+            "title": bookData.title,
+            "body": "El autor que sigues acaba de publicar un nuevo libro."
+          }),
+        });
+      } catch (notifyError) {
+        console.error('Error al notificar a los seguidores del autor:', notifyError);
+      }
+
       return book;
     } catch (error) {
       console.error('Error en BooksService.togglePublishStatus:', error);
