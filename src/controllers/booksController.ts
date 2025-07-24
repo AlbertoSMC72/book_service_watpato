@@ -289,4 +289,31 @@ export class BooksController {
             });
         }
     }
+
+    // Buscar libros por texto similar
+    static async searchBooks(req: Request, res: Response): Promise<void> {
+        try {
+            const { q, userId } = req.query;
+            if (!q || typeof q !== 'string' || q.trim().length < 2) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Debe proporcionar un texto de búsqueda (mínimo 2 caracteres) en el parámetro "q".'
+                });
+                return;
+            }
+            const userIdNum = userId ? parseInt(userId as string) : undefined;
+            const books = await BooksService.searchBooksByText(q, userIdNum);
+            res.status(200).json({
+                success: true,
+                message: 'Resultados de búsqueda',
+                data: books
+            });
+        } catch (error) {
+            console.error('Error en searchBooks:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Error interno del servidor'
+            });
+        }
+    }
 }

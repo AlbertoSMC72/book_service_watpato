@@ -179,4 +179,14 @@ export class BooksService {
       throw new Error('Error al obtener los libros en escritura');
     }
   }
+
+  // Buscar libros por texto similar
+  static async searchBooksByText(query: string, userId?: number) {
+    try {
+      return await BooksRepository.searchBooksByText(query, userId);
+    } catch (error) {
+      console.error('Error en BooksService.searchBooksByText:', error);
+      throw new Error('Error al buscar libros');
+    }
+  }
 }

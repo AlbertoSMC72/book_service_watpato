@@ -480,6 +480,55 @@ export class BooksRepository {
         }
     }
 
+    // Buscar libros por texto similar en título o descripción
+    static async searchBooksByText(query: string, userId?: number): Promise<Array<{
+        id: string;
+        title: string;
+        description: string | null;
+        coverImage: string | null;
+        genres: Array<{ id: string; name: string }>;
+        isFav: boolean;
+    }>> {
+        try {
+            const books = await prisma.book.findMany({
+                where: {
+                    published: true,
+                    OR: [
+                        { title: { contains: query, mode: 'insensitive' } },
+                        { description: { contains: query, mode: 'insensitive' } }
+                    ]
+                },
+                include: {
+                    genres: {
+                        include: {
+                            genre: true
+                        }
+                    },
+                    likes: userId ? {
+                        where: { userId: BigInt(userId) },
+                        select: { userId: true }
+                    } : false
+                },
+                orderBy: { createdAt: 'desc' }
+            });
+
+            return books.map(book => ({
+                id: book.id.toString(),
+                title: book.title,
+                description: book.description,
+                coverImage: book.coverImage,
+                genres: book.genres.map(bg => ({
+                    id: bg.genre.id.toString(),
+                    name: bg.genre.name
+                })),
+                isFav: userId ? (book.likes && book.likes.length > 0) : false
+            }));
+        } catch (error) {
+            console.error('Error en searchBooksByText:', error);
+            throw new Error('Error al buscar libros');
+        }
+    }
+
     // Métodos auxiliares
     static async userExists(userId: number): Promise<boolean> {
         try {

@@ -156,6 +156,69 @@ router.post('/', BooksController.createBook);
 
 /**
  * @swagger
+ * /api/books/search:
+ *   get:
+ *     summary: Buscar libros por texto en título o descripción
+ *     tags: [Books]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Texto a buscar (mínimo 2 caracteres)
+ *       - in: query
+ *         name: userId
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: ID del usuario para saber si ya dio fav
+ *     responses:
+ *       200:
+ *         description: Resultados de búsqueda
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       title:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       coverImage:
+ *                         type: string
+ *                         nullable: true
+ *                       genres:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: string
+ *                             name:
+ *                               type: string
+ *                       isFav:
+ *                         type: boolean
+ *       400:
+ *         description: Parámetro de búsqueda inválido
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get('/search', BooksController.searchBooks);
+
+/**
+ * @swagger
  * /api/books/{bookId}:
  *   get:
  *     summary: Obtener libro específico con capítulos
