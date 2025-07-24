@@ -495,7 +495,16 @@ export class BooksRepository {
                     published: true,
                     OR: [
                         { title: { contains: query, mode: 'insensitive' } },
-                        { description: { contains: query, mode: 'insensitive' } }
+                        { description: { contains: query, mode: 'insensitive' } },
+                        {
+                            genres: {
+                                some: {
+                                    genre: {
+                                        name: { contains: query, mode: 'insensitive' }
+                                    }
+                                }
+                            }
+                        }
                     ]
                 },
                 include: {
